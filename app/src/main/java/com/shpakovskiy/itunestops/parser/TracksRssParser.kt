@@ -5,9 +5,23 @@ package com.shpakovskiy.itunestops.parser
  * because built-in one is not convenient for the purposes it used for in this project.
  */
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.os.AsyncTask
 import android.util.Log
+import android.widget.ImageView
+import android.widget.ListView
+import com.shpakovskiy.itunestops.R
+import com.shpakovskiy.itunestops.adapter.TracksListItemAdapter
 import com.shpakovskiy.itunestops.entity.Track
+import java.io.IOException
+import java.io.InputStream
 import java.lang.Exception
+import java.net.MalformedURLException
+import java.net.URL
+import java.nio.charset.StandardCharsets
+import kotlin.properties.Delegates
 
 class TracksRssParser : Parser {
     private val TAG = "TracksRssParser"
@@ -18,8 +32,8 @@ class TracksRssParser : Parser {
     private val imageUrlRegex: Regex = Regex("""<im:image height="[0-9]{3}">((?:(?!<im:image height="[0-9]{3}">|</im:image)[\s\S])*)</im:image>""")
     private val previewUrlRegex: Regex = Regex("""<link\s+title="Preview".*href="((?:(?!<link\s+title="Preview".*href="|")[\s\S])*)"""")
 
-    private val tracks = ArrayList<Track>()
-    
+    val tracks = ArrayList<Track>()
+
     override fun parse(xmlData: String?): Boolean {
         Log.d(TAG, "Parsing started")
 
@@ -35,6 +49,7 @@ class TracksRssParser : Parser {
             Log.d(TAG, "Parsing failed")
             e.printStackTrace()
         }
+
         return false
     }
 
@@ -47,7 +62,7 @@ class TracksRssParser : Parser {
         newTrack.artist = artistNameRegex.find(entry)?.groupValues?.get(1).toString()
         newTrack.name = trackNameRegex.find(entry)?.groupValues?.get(1).toString()
         newTrack.previewUrl = previewUrlRegex.find(entry)?.groupValues?.get(1).toString()
-        newTrack.imageUrl = imageUrlRegex.find(entry)?.groupValues?.get(1).toString()
+        newTrack.iconUrl = imageUrlRegex.find(entry)?.groupValues?.get(1).toString()
         return newTrack
     }
 }

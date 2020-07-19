@@ -1,12 +1,17 @@
 package com.shpakovskiy.itunestops.entity
 
+import android.graphics.Bitmap
+
 class Track {
     var name: String = ""
     var artist: String = ""
-    var imageUrl: String = ""
+    var iconUrl: String = ""
     var previewUrl: String = ""
 
     override fun toString(): String {
-        return "Track(name='$name', artist='$artist', imageUrl='$imageUrl', previewUrl='$previewUrl')"
+        return """name = $name
+                  artist = $artist
+                  previewUrl = $previewUrl  
+        """.trimIndent()
     }
 }
