@@ -1,19 +1,22 @@
 package com.shpakovskiy.itunestops
 
 import android.content.Context
+import android.content.Intent
+import android.media.AudioAttributes
+import android.media.MediaPlayer
+import android.net.Uri
 import android.os.AsyncTask
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.widget.ArrayAdapter
 import android.widget.ListView
-import com.shpakovskiy.itunestops.adapter.TracksListItemAdapter
+import androidx.appcompat.app.AppCompatActivity
+import com.shpakovskiy.itunestops.adapter.TracksListAdapter
 import com.shpakovskiy.itunestops.entity.Track
 import com.shpakovskiy.itunestops.parser.TracksRssParser
 import kotlinx.android.synthetic.main.activity_main.*
 import java.net.URL
-import java.nio.charset.StandardCharsets
 import kotlin.properties.Delegates
+
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "MainActivity"
@@ -25,6 +28,26 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         downloadData.execute("http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topsongs/limit=25/xml")
+
+        tracksHolder.setOnItemClickListener { _, _, _, id ->
+            run {
+                //openUrl(tracks[id.toInt()].previewUrl)
+                //Toast.makeText(this, tracks[id.toInt()].trackPageUrl, 3).show()
+                try {
+                    val url = tracks[id.toInt()].previewUrl
+                    val mediaPlayer = MediaPlayer()
+                    mediaPlayer.setAudioAttributes(
+                        AudioAttributes.Builder()
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build())
+                    mediaPlayer.setDataSource(url)
+                    mediaPlayer.prepare()
+                    mediaPlayer.start()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
     }
 
     override fun onDestroy() {
@@ -32,7 +55,9 @@ class MainActivity : AppCompatActivity() {
         downloadData.cancel(true)
     }
 
-    companion object {
+    private companion object {
+        lateinit var tracks: List<Track>
+
         private class DownloadData(context: Context, listView: ListView) : AsyncTask<String, Void, String>() {
             private val TAG = "DownloadData"
 
@@ -61,15 +86,13 @@ class MainActivity : AppCompatActivity() {
                 val tracksRssParser = TracksRssParser()
                 tracksRssParser.parse(result)
 
-                //val arrayAdapter = ArrayAdapter<Track>(context, R.layout.tracks_list_item, tracksRssParser.tracks)
-                //listView.adapter = arrayAdapter
-
-                val tracksListAdapter = TracksListItemAdapter(context, R.layout.tracks_list_item, tracksRssParser.tracks)
+                tracks = tracksRssParser.tracks
+                val tracksListAdapter = TracksListAdapter(context, R.layout.tracks_list_item, tracksRssParser.tracks)
                 listView.adapter = tracksListAdapter
             }
 
             private fun downloadRssFeed(urlPath: String?): String {
-                return URL(urlPath).readText(StandardCharsets.UTF_8)
+                return URL(urlPath).readText()
             }
         }
     }

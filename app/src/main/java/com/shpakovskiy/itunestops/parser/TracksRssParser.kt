@@ -5,23 +5,10 @@ package com.shpakovskiy.itunestops.parser
  * because built-in one is not convenient for the purposes it used for in this project.
  */
 
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.os.AsyncTask
 import android.util.Log
-import android.widget.ImageView
-import android.widget.ListView
-import com.shpakovskiy.itunestops.R
-import com.shpakovskiy.itunestops.adapter.TracksListItemAdapter
+import androidx.core.text.HtmlCompat
 import com.shpakovskiy.itunestops.entity.Track
-import java.io.IOException
-import java.io.InputStream
 import java.lang.Exception
-import java.net.MalformedURLException
-import java.net.URL
-import java.nio.charset.StandardCharsets
-import kotlin.properties.Delegates
 
 class TracksRssParser : Parser {
     private val TAG = "TracksRssParser"
@@ -31,6 +18,7 @@ class TracksRssParser : Parser {
     private val artistNameRegex: Regex = Regex("""<im:artist.*>((?:(?!<im:artist.*|</im:artist>)[\s\S])*)</im:artist>""")
     private val imageUrlRegex: Regex = Regex("""<im:image height="[0-9]{3}">((?:(?!<im:image height="[0-9]{3}">|</im:image)[\s\S])*)</im:image>""")
     private val previewUrlRegex: Regex = Regex("""<link\s+title="Preview".*href="((?:(?!<link\s+title="Preview".*href="|")[\s\S])*)"""")
+    //private val trackUrlRegex: Regex = Regex("""<link rel="alternate".*href="((?:(?!<link rel="alternate".*href=">|"/>)[\s\S])*)"/>""")
 
     val tracks = ArrayList<Track>()
 
@@ -59,10 +47,14 @@ class TracksRssParser : Parser {
 
     private fun entryToTrack(entry: String): Track {
         val newTrack = Track()
-        newTrack.artist = artistNameRegex.find(entry)?.groupValues?.get(1).toString()
-        newTrack.name = trackNameRegex.find(entry)?.groupValues?.get(1).toString()
+
+        newTrack.artist = HtmlCompat.fromHtml(artistNameRegex.find(entry)?.groupValues?.get(1).toString(),
+            HtmlCompat.FROM_HTML_MODE_LEGACY).toString()
+        newTrack.name = HtmlCompat.fromHtml(trackNameRegex.find(entry)?.groupValues?.get(1).toString(),
+            HtmlCompat.FROM_HTML_MODE_LEGACY).toString()
         newTrack.previewUrl = previewUrlRegex.find(entry)?.groupValues?.get(1).toString()
         newTrack.iconUrl = imageUrlRegex.find(entry)?.groupValues?.get(1).toString()
+
         return newTrack
     }
 }

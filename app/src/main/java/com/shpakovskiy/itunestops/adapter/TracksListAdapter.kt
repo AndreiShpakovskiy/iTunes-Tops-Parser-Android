@@ -10,9 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.ImageView
-import com.shpakovskiy.itunestops.MainActivity
 import com.shpakovskiy.itunestops.entity.Track
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.tracks_list_item.view.*
 import java.io.IOException
 import java.io.InputStream
@@ -20,23 +18,31 @@ import java.net.MalformedURLException
 import java.net.URL
 import kotlin.properties.Delegates
 
-
-class TracksListItemAdapter(context: Context, private val resource: Int, private val tracks: List<Track>):
+class TracksListAdapter(context: Context, private val resource: Int, private val tracks: List<Track>):
     ArrayAdapter<Track>(context, resource) {
 
     private val TAG = "TracksListItemAdapter"
-    private var iconLoader: IconLoader? = null
     private val layoutInflater = LayoutInflater.from(context)
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+        val currentTrack = tracks[position]
         val view: View = convertView ?: layoutInflater.inflate(resource, parent, false)
 
-        val currentTrack = tracks[position]
+        Log.d(TAG, "Viewing ${currentTrack.name}")
 
-        iconLoader = IconLoader(view.trackImage)
-        iconLoader!!.execute(currentTrack.iconUrl)
         view.trackName.text = currentTrack.name
         view.artistName.text = currentTrack.artist
+
+        if (currentTrack.icon == null) {
+            view.trackImage.setImageBitmap(null)
+            Log.d(TAG, "No picture for track with name ${currentTrack.name}")
+            val iconLoader = IconLoader(currentTrack, view.trackImage)
+            iconLoader.execute(currentTrack.iconUrl)
+        } else {
+            view.trackImage.setImageBitmap(null)
+            Log.d(TAG, "Picture for track with name ${currentTrack.name} is already loaded")
+            view.trackImage.setImageBitmap(currentTrack.icon)
+        }
 
         return view
     }
@@ -45,13 +51,15 @@ class TracksListItemAdapter(context: Context, private val resource: Int, private
         return tracks.size
     }
 
-    companion object {
-        private class IconLoader(imageView: ImageView) : AsyncTask<String, Void, Bitmap>() {
+    //companion object {
+        private class IconLoader(track: Track, imageView: ImageView) : AsyncTask<String, Void, Bitmap>() {
             private val TAG = "IconLoader"
 
+            var track: Track by Delegates.notNull()
             var imageView: ImageView by Delegates.notNull()
 
             init {
+                this.track = track
                 this.imageView = imageView
             }
 
@@ -68,7 +76,7 @@ class TracksListItemAdapter(context: Context, private val resource: Int, private
 
             override fun onPostExecute(result: Bitmap?) {
                 super.onPostExecute(result)
-
+                track.icon = result
                 imageView.setImageBitmap(result)
             }
 
@@ -83,5 +91,5 @@ class TracksListItemAdapter(context: Context, private val resource: Int, private
                 return null
             }
         }
-    }
+    //}
 }
